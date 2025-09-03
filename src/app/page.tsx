@@ -5,6 +5,14 @@ import { useState } from "react";
 import Papa from "papaparse";
 import { Table as TTable } from "@/lib/types";
 import { profileTable, topCorrelations, firstDateTrend } from "@/lib/stats";
+import { suggestCharts, buildLineData, buildBarData, buildScatterData, ChartConfig } from "@/lib/charts";
+
+import {
+  ResponsiveContainer,
+  LineChart, Line, XAxis, YAxis, Tooltip, CartesianGrid, Legend,
+  BarChart, Bar,
+  ScatterChart, Scatter,
+} from "recharts";
 
 type Table = TTable;
 
@@ -20,6 +28,7 @@ export default function Home() {
   const [profile, setProfile] = useState<ReturnType<typeof profileTable> | null>(null);
   const [correls, setCorrels] = useState<{ a: string; b: string; r: number }[] | null>(null);
   const [trend, setTrend] = useState<ReturnType<typeof firstDateTrend> | null>(null);
+  const [chartConfigs, setChartConfigs] = useState<ChartConfig[] | null>(null);
 
   function afterLoad(newTable: Table) {
     setTable(newTable);
@@ -27,6 +36,7 @@ export default function Home() {
     setProfile(p);
     setCorrels(topCorrelations(newTable, 3));
     setTrend(firstDateTrend(newTable));
+    setChartConfigs(suggestCharts(newTable));
   }
 
   // CSV: file upload
@@ -82,7 +92,7 @@ export default function Home() {
   }
 
   function clearAll() {
-    setTable(null); setJsonText(""); setProfile(null); setCorrels(null); setTrend(null);
+    setTable(null); setJsonText(""); setProfile(null); setCorrels(null); setTrend(null); setChartConfigs(null);
   }
 
   return (
@@ -185,7 +195,7 @@ export default function Home() {
         </section>
       )}
 
-      {/* QUICK INSIGHTS FROM STATS */}
+      {/* QUICK STATS */}
       {table && (
         <section className="card p-5">
           <h2 className="mb-2 text-lg font-semibold">4) Quick Stats</h2>
@@ -204,6 +214,79 @@ export default function Home() {
             {(!correls || correls.length === 0) && <li>No strong correlations found.</li>}
             {!trend && <li>No date/number trend found.</li>}
           </ul>
+        </section>
+      )}
+
+      {/* CHARTS */}
+      {table && chartConfigs && chartConfigs.length > 0 && (
+        <section className="card p-5">
+          <h2 className="mb-2 text-lg font-semibold">5) Charts</h2>
+
+          <div className="grid gap-6 md:grid-cols-1">
+            {chartConfigs.map((cfg, idx) => {
+              if (cfg.type === "line") {
+                const data = buildLineData(table, cfg.x, cfg.y);
+                return (
+                  <div key={idx} className="rounded-xl border border-gray-200 p-3">
+                    <p className="mb-2 text-sm font-medium">{cfg.title}</p>
+                    <div style={{ width: "100%", height: 320 }}>
+                      <ResponsiveContainer>
+                        <LineChart data={data}>
+                          <CartesianGrid strokeDasharray="3 3" />
+                          <XAxis dataKey="x" />
+                          <YAxis />
+                          <Tooltip />
+                          <Legend />
+                          <Line type="monotone" dataKey="y" />
+                        </LineChart>
+                      </ResponsiveContainer>
+                    </div>
+                  </div>
+                );
+              }
+              if (cfg.type === "bar") {
+                const data = buildBarData(table, cfg.cat);
+                return (
+                  <div key={idx} className="rounded-xl border border-gray-200 p-3">
+                    <p className="mb-2 text-sm font-medium">{cfg.title}</p>
+                    <div style={{ width: "100%", height: 320 }}>
+                      <ResponsiveContainer>
+                        <BarChart data={data}>
+                          <CartesianGrid strokeDasharray="3 3" />
+                          <XAxis dataKey="name" />
+                          <YAxis />
+                          <Tooltip />
+                          <Legend />
+                          <Bar dataKey="count" />
+                        </BarChart>
+                      </ResponsiveContainer>
+                    </div>
+                  </div>
+                );
+              }
+              if (cfg.type === "scatter") {
+                const data = buildScatterData(table, cfg.x, cfg.y);
+                return (
+                  <div key={idx} className="rounded-xl border border-gray-200 p-3">
+                    <p className="mb-2 text-sm font-medium">{cfg.title}</p>
+                    <div style={{ width: "100%", height: 320 }}>
+                      <ResponsiveContainer>
+                        <ScatterChart>
+                          <CartesianGrid strokeDasharray="3 3" />
+                          <XAxis dataKey="x" />
+                          <YAxis dataKey="y" />
+                          <Tooltip />
+                          <Legend />
+                          <Scatter data={data} />
+                        </ScatterChart>
+                      </ResponsiveContainer>
+                    </div>
+                  </div>
+                );
+              }
+              return null;
+            })}
+          </div>
         </section>
       )}
     </div>
