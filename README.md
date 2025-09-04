@@ -6,7 +6,7 @@ It ingests CSV/JSON/API data, performs **automated analysis & pattern detection*
 ---
 
 ## 🚀 Live Demo
-[Live URL](https://your-vercel-app.vercel.app)
+[Live URL]([https://your-vercel-app.vercel.app](https://xephyr-insights-git-main-neshads-projects-cd619fd4.vercel.app?_vercel_share=oWJdQBtT7ygkOwcalHLOltZ5nzDrRGvc))
 
 ---
 
